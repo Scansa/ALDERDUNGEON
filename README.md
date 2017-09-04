@@ -1,2 +1,2 @@
 # AlderDungeon
-Game
+Python Game, RPG, Many bugs, fixing it slowly
