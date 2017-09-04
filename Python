@@ -1,0 +1,305 @@
+import random 
+import os
+import time
+os.environ['LINES'] = '20'
+os.environ['COLUMNS'] = '40'
+
+print('Controls To Move Are wasd')
+roomOne = '''
+O═══════════════════════════════O
+║ p                             ║
+║                               ║
+║                               ║
+║  +              ╔═════════════╣
+║                 ║             ║
+║S                ║    ╔O O╗    ║
+╠═O O╦══════O O═══╝    ║ > ║    ║
+║    ║                 ╚═══╝    ║
+║    ║                  Ø       ║
+O════╩══════════════════════════O
+'''
+roomTwo = '''
+O═══════════════════════════════O
+║ p                             ║
+╠═══╦══O O╗            +        ║
+║ < ║     ║                     ║
+║   ║     ╠═════╦══════O O══════╣
+║   O   d ║     O               ║
+║         ║                     ║
+║   O     ║  ß  O               ║
+║   ╠═════╩═════╩═══O O╦═O O════╣
+║c  ║>  e              ║       B║
+O═══╩══════════════════╩════════O
+'''
+roomThree = '''
+O═══════════════════════════════O
+║ p                             ║
+╠═══╦══O O╗            +        ║
+║ < ║     ║                     ║
+║   ║     ╠═════╦══════O O══════╣
+║   O     ║     O               ║
+║         ║                     ║
+║   O     ║     O               ║
+║   ╠═════╩═════╩═══O O╦═O O════╣
+║   ║>                 ║        ║
+O═══╩══════════════════╩════════O
+'''
+
+weapon = "unarmed"
+healthPoints = 500
+Ø = 85
+ß = 125
+c = 175
+d = 250
+e = 275
+
+def genLevel():
+    global MAP
+    level = []
+    row = []
+    for twat in roomOne:
+        row.append(twat)
+        if twat == '\n':
+            level.append(row)
+            row = []        
+    return level
+
+def genLevelTwo():
+    global MAP
+    level=[]
+    row=[]
+    for twat2 in roomTwo:
+        row.append(twat2)
+        if twat2 == '\n':
+            level.append(row)
+            row = []
+    return level
+
+def genLevelThree():
+    global MAP
+    level=[]
+    row=[]
+    for twat3 in roomThree:
+        row.append(twat3)
+        if twat3 == '\n':
+            level.append(row)
+            row = []
+    return level
+
+###this function though when called will print the level
+##now all that needs to be added is a main game loop that will call this function after every character movement
+####And the rest of the game code
+def printLevel(level):
+    for row in level:
+        for character in row:
+             print(character, end=" ")
+
+
+def playerMovement(level):
+    print('Player HP = ',healthPoints)
+    print("Weapon = ",weapon)
+    print("")
+    if Ø<=0:
+        print("Ø is Dead!")
+    else:
+        print ('Ø HP = ',Ø)
+    if ß<=0:
+        print("ß is Dead!")
+    else:
+        print("ß HP = ",ß)
+    if c<=0:
+        print("c is Dead!")
+    else:
+        print ('c HP = ',c)
+    if d<=0:
+        print("d is Dead!")
+    else:
+        print ('d HP = ',d)
+    if e<=0:
+        print("e is Dead!")
+    else:
+        print ('e HP = ',e)
+    print("")
+    action = input('What do you want to do?')
+    if action in ['w','a','s','d']:
+        level = move(level,'p',action)
+    return level
+
+def move(level,object,direction):
+    global MAP,healthPoints,weapon
+    oldPlace = getObjectPlace(level,object)
+    newPlace = oldPlace[:]
+    if direction == 'w':
+        newPlace[0] -= 1
+    elif direction == 's':
+        newPlace[0] += 1
+    elif direction == 'a':
+        newPlace[1] -=1
+    else:
+        newPlace[1] +=1
+    square = checkSquare(level,newPlace)
+    if square == ' ':
+        level = setObjectPlace(level,object,newPlace,oldPlace)
+    elif square =='S':
+        weapon = 'sword'
+        level[newPlace[0]][newPlace[1]] = ' '
+        level = setObjectPlace(level,object,newPlace,oldPlace)
+    elif square =='B':
+        weapon = 'battle-axe'
+        level[newPlace[0]][newPlace[1]] = ' '
+        level = setObjectPlace(level,object,newPlace,oldPlace)
+    elif square == '║':
+        pass
+    elif square == '═':
+        pass
+    elif square == 'O':
+        pass
+    elif square == '╔':
+        pass
+    elif square == '╝':
+        pass
+    elif square == '╣':
+        pass
+    elif square == '╚':
+        pass
+    elif square == '╗':
+        pass
+    elif square == '╦':
+        pass
+    elif square == '+':
+        healthPoints = healthPoints + 100
+        level[newPlace[0]][newPlace[1]] = ' '
+    
+    elif square == '>':
+        MAP=MAP+1
+        mainLoop()
+    elif square == '<':
+        MAP=MAP-1
+        mainLoop()
+    else:
+        level = fightEnemy(level,square,newPlace)
+    return level
+  
+def moveEnemies(level):
+    enemies = ['Ø','ß','c','d','e']
+    for y,row in enumerate(level):
+        for x, thing in enumerate(row):
+            if thing in enemies:
+                newx = x+random.randrange(-1,2)
+                newy = y+random.randrange(-1,2)
+                if checkSquare(level,[newy,newx]) == ' ':
+                    level[newy][newx]=thing
+                    level[y][x]=' '
+    return level
+
+def getObjectPlace(level,object):
+    #'''Finds specific objects on the level'''
+    for y,row in enumerate(level):
+        for x, thing in enumerate(row):
+            if thing == object:
+                print(thing)
+                place = [y,x]
+    return place
+      
+      
+      
+def setObjectPlace(level,object,newPlace,oldPlace):
+    ##sets a new position for an object
+    level[oldPlace[0]][oldPlace[1]] = (' ')
+    level[newPlace[0]][newPlace[1]] = object
+    return level
+
+def checkSquare(level,newPlace):
+    #'checks what is in a square'''
+    square = level[newPlace[0]][newPlace[1]]
+    return(square)
+	
+def fightEnemy(level,enemies,newPlace):
+    #'''when players fight enemies the hitpoints are subtracted'''
+    global healthPoints,Ø,ß,c,d,e,weapon
+    healthPoints -= random.randrange(0,60)
+    if square == 'Ø' and weapon == 'sword':
+        Ø -= random.randrange(30,40)
+    elif square == 'Ø' and weapon == "unarmed":
+        Ø -= random.randrange(0,10)
+    elif square == 'Ø' and weapon == "battle-axe":
+        Ø -= random.randrange(70,80)
+    if Ø <= 0:
+        level[newPlace[0]][newPlace[1]] = ' '
+        
+    if square == 'ß' and weapon == 'sword':
+        ß -= random.randrange(30,40)
+    elif square == 'ß' and weapon == "unarmed":
+        ß -= random.randrange(0,10)
+    elif square == 'ß' and weapon == "battle-axe":
+        ß -= random.randrange(70,80)
+    if ß <= 0:
+        level[newPlace[0]][newPlace[1]] = ' '
+        
+    if square == 'c' and weapon == 'sword':
+        c -= random.randrange(30,40)
+    elif square == 'c' and weapon == "unarmed":
+        c -= random.randrange(0,10)
+    elif square == 'c' and weapon == "battle-axe":
+        c -= random.randrange(70,80)
+    if c <= 0:
+        level[newPlace[0]][newPlace[1]] = ' '
+        
+    if square == 'd' and weapon == 'sword':
+        d -= random.randrange(30,40)
+    elif square == 'd' and weapon == "unarmed":
+        d -= random.randrange(0,10)
+    elif square == 'd' and weapon == "battle-axe":
+        d -= random.randrange(70,80)
+    if d <= 0:
+        level[newPlace[0]][newPlace[1]] = ' '
+        
+    if square == 'e' and weapon == 'sword':
+        e -= random.randrange(30,40)
+    elif square == 'e' and weapon == "unarmed":
+        e -= random.randrange(0,10)
+    elif square == 'e' and weapon == "battle-axe":
+        e -= random.randrange(70,80)
+    if e <= 0:
+        level[newPlace[0]][newPlace[1]] = ' '
+    
+    if healthPoints <= 0:
+        input("You Died!")
+        quit()
+    return level	
+
+def mainLoop():
+    #'''Runs the game'''
+    global MAP
+    while MAP==0:
+        level = levelOne
+        printLevel(level)
+        level = playerMovement(level)
+        level = moveEnemies(level)
+
+        print('\n'*100)
+    
+    while MAP==1:
+        level = levelTwo
+        printLevel(level)
+        level = playerMovement(level)
+        level = moveEnemies(level)
+        print('\n'*100)
+
+    while MAP==2:
+        level = levelThree
+        printLevel(level)
+        level = playerMovement(level)
+        level = moveEnemies(level)
+        print('\n'*100)
+
+
+
+
+
+MAP=0
+levelOne = genLevel()
+levelTwo = genLevelTwo()
+levelThree = genLevelThree()
+mainLoop()
+
